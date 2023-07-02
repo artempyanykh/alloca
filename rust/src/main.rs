@@ -97,12 +97,13 @@ impl SizeClass {
 fn main() -> std::io::Result<()> {
     loop {
         let mut buffer = String::new();
-        print!("Enter size in bytes to allocate > ");
+        print!("Enter size in megabytes to allocate > ");
         io::stdout().flush()?;
         match io::stdin().read_line(&mut buffer) {
-            Ok(_) => match buffer.trim().parse() {
-                Ok(num) => {
-                    let _data = run_allocate(num);
+            Ok(_) => match buffer.trim().parse::<usize>() {
+                Ok(mbytes) => {
+		    let bytes = mbytes * 1024 * 1024;
+                    let _data = run_allocate(bytes);
                     println!("Press ENTER to release allocated data");
                     if io::stdin().read_line(&mut buffer).is_err() {
                         break;

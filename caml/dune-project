@@ -1,22 +1,22 @@
 (lang dune 3.8)
 
-(name ofreenot)
+(name alloca)
 
 (generate_opam_files true)
 
 (source
- (github username/reponame))
+ (github artempyanykh/alloca))
 
-(authors "Author Name")
+(authors "Artem Pianykh")
 
-(maintainers "Maintainer Name")
+(maintainers "Artem Pianykh")
 
 (license LICENSE)
 
 (documentation https://url/to/documentation)
 
 (package
- (name ofreenot)
+ (name alloca)
  (synopsis "A short synopsis")
  (description "A longer description")
  (depends ocaml dune)
