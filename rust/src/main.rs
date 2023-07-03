@@ -1,108 +1,16 @@
 use std::io;
 use std::io::Write;
 
-trait Obj {}
-
-#[derive(Default)]
-#[allow(dead_code)]
-struct Size32 {
-    pub f1: usize,
-    pub f2: usize,
-    pub f3: usize,
-    pub f4: usize,
-}
-impl Obj for Size32 {}
-
-#[derive(Default)]
-#[allow(dead_code)]
-struct Size64 {
-    pub f1: Size32,
-    pub f2: Size32,
-}
-impl Obj for Size64 {}
-
-#[derive(Default)]
-#[allow(dead_code)]
-struct Size256 {
-    pub f1: Size64,
-    pub f2: Size64,
-    pub f3: Size64,
-    pub f4: Size64,
-}
-impl Obj for Size256 {}
-
-#[derive(Default)]
-#[allow(dead_code)]
-struct Size512 {
-    pub f1: Size64,
-    pub f2: Size64,
-    pub f3: Size64,
-    pub f4: Size64,
-    pub f5: Size64,
-    pub f6: Size64,
-    pub f7: Size64,
-    pub f8: Size64,
-}
-impl Obj for Size512 {}
-
-#[derive(Default)]
-#[allow(dead_code)]
-struct Size1024 {
-    pub f1: Size512,
-    pub f2: Size512,
-}
-
-impl Obj for Size1024 {}
-
-#[derive(Default)]
-#[allow(dead_code)]
-struct Size4096 {
-    pub f1: Size512,
-    pub f2: Size512,
-    pub f3: Size512,
-    pub f4: Size512,
-    pub f5: Size512,
-    pub f6: Size512,
-    pub f7: Size512,
-    pub f8: Size512,
-}
-
-impl Obj for Size4096 {}
-
-#[derive(Copy, Clone)]
-enum SizeClass {
-    S32,
-    S64,
-    S256,
-    S512,
-    S1024,
-    S4096,
-}
-
-impl SizeClass {
-    fn into_size(self) -> usize {
-        use SizeClass::*;
-
-        match self {
-            S32 => 32,
-            S64 => 64,
-            S256 => 256,
-            S512 => 512,
-            S1024 => 1024,
-            S4096 => 4096,
-        }
-    }
-}
-
 fn main() -> std::io::Result<()> {
     loop {
         let mut buffer = String::new();
-        print!("Enter size in megabytes to allocate > ");
+        print!("Enter the size in megabytes to allocate > ");
         io::stdout().flush()?;
+
         match io::stdin().read_line(&mut buffer) {
             Ok(_) => match buffer.trim().parse::<usize>() {
                 Ok(mbytes) => {
-		    let bytes = mbytes * 1024 * 1024;
+                    let bytes = mbytes * 1024 * 1024;
                     let _data = run_allocate(bytes);
                     println!("Press ENTER to release allocated data");
                     if io::stdin().read_line(&mut buffer).is_err() {
@@ -121,36 +29,42 @@ fn main() -> std::io::Result<()> {
     Ok(())
 }
 
-fn run_allocate(num: usize) -> Vec<Box<dyn Obj>> {
-    use rand::RngCore;
-    use SizeClass::*;
+const SIZE_CLASSES: &[usize] = &[
+    32,
+    64,
+    128,
+    256,
+    512,
+    1024,
+    4096,
+    1024 * 1024,
+    4 * 1024 * 1024,
+];
 
-    let scall = vec![S32, S64, S256, S512, S1024, S4096];
-    let mut sccnt = vec![0, 0, 0, 0, 0, 0];
+fn run_allocate(num: usize) -> Vec<Box<[u8]>> {
+    use rand::RngCore;
+
+    let mut class_counts = vec![0 as usize; SIZE_CLASSES.len()];
 
     let mut remains: i64 = num as i64;
-    let mut alloced = Vec::new();
+    let mut alloced = Vec::with_capacity(1024);
 
     while remains > 0 {
-        let scn = (rand::thread_rng().next_u64() % 6) as usize;
-        let sc = scall[scn];
-        let obj: Box<dyn Obj> = match sc {
-            S32 => Box::<Size32>::default(),
-            S64 => Box::<Size64>::default(),
-            S256 => Box::<Size256>::default(),
-            S512 => Box::<Size512>::default(),
-            S1024 => Box::<Size1024>::default(),
-            S4096 => Box::<Size4096>::default(),
-        };
-        sccnt[scn] += 1;
-        remains -= sc.into_size() as i64;
+        let n_size_class = (rand::thread_rng().next_u64() % (SIZE_CLASSES.len() as u64)) as usize;
+        let size_class = SIZE_CLASSES[n_size_class];
+
+        let obj = vec![0 as u8; size_class].into_boxed_slice();
+
+        class_counts[n_size_class] += size_class;
+        remains -= size_class as i64;
+
         alloced.push(obj)
     }
 
     println!(
         "Allocated {} bytes, by size class: {:?}",
         num as i64 - remains,
-        sccnt
+        class_counts
     );
 
     alloced
