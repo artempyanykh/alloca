@@ -1,4 +1,0 @@
-(executable
- (public_name ofreenot)
- (name main)
- (libraries ofreenot))
