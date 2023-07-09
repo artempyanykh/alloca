@@ -1,4 +1,4 @@
-build_all: target/alloca4 target/alloca5
+build_all: target/alloca4 target/alloca5 target/alloca5c
 
 target:
 	mkdir -p target
@@ -9,20 +9,31 @@ target/4: target
 target/5: target
 	mkdir -p target/5
 
+target/5c: target
+	mkdir -p target/5c
+
 target/alloca4: alloca.ml target/4
 	cp $< target/4
 	(cd target/4; opam exec --switch=4.14.1 -- ocamlopt -O2 -o alloca $<)
-	cp target/4/alloca target/alloca4
+	cp -f target/4/alloca target/alloca4
 
 target/alloca5: alloca.ml target/5
 	cp $< target/5
-	(cd target/5; opam exec --switch=5-compact -- ocamlopt -O2 -o alloca $<)
-	cp target/5/alloca target/alloca5
+	(cd target/5; opam exec --switch=5.0.0 -- ocamlopt -O2 -o alloca $<)
+	cp -f target/5/alloca target/alloca5
+
+target/alloca5c: alloca.ml target/5c
+	cp $< target/5c
+	(cd target/5c; opam exec --switch=/home/arr/dev/ocaml -- ocamlopt -O2 -o alloca $<)
+	cp -f target/5c/alloca target/alloca5c
 
 run4: target/alloca4
 	$<
 
 run5: target/alloca5
+	$<
+
+run5c: target/alloca5c
 	$<
 
 .PHONY: clean
