@@ -15,12 +15,34 @@ let size_classes = [| 1015 |]
 let alloc_single nbytes =
   Bytes.make nbytes (Char.chr 0)
 
-let alloc_many size_class nbytes =
-  let nitems = nbytes / size_class + 1 in
-  Array.init nitems (fun _ -> alloc_single size_class)
+let div_up num denom =
+  assert(num >= 0 && denom > 0) ;
+  (num + denom - 1) / denom
+
+let alloc_many size_classes nbytes =
+  let nclasses = Array.length size_classes in
+  let bytes_per_class = div_up nbytes nclasses in
+  let els_per_class =
+    Array.init nclasses
+      (fun sc -> div_up bytes_per_class size_classes.(sc)) in
+  let cum_els_per_class =
+    els_per_class
+    |> Array.fold_left_map (fun prev cur -> prev + cur, prev + cur) 0
+    |> snd
+    |> Array.mapi (fun i n -> i, n)
+  in
+  let alloc_by_num i =
+    let sc = Array.find_opt (fun (_sc, n) -> n >= i) cum_els_per_class
+             |> Option.get
+             |> fst
+    in
+    let sc_size = size_classes.(sc) in
+    alloc_single sc_size
+  in
+  let els_total = Array.fold_left (+) 0 els_per_class in
+  Array.init els_total alloc_by_num
 
 let run_gc () =
-  Gc.full_major ();
   Gc.compact ();
   Gc.print_stat stdout;
   Out_channel.flush stdout
@@ -28,9 +50,13 @@ let run_gc () =
 let parse_input () =
   let line = read_line () in
   match String.split_on_char ' ' line with
-  | [mb_str; sz_str] ->
+  | mb_str :: sz_str1 :: sz_strs ->
      (try
-        Some (int_of_string mb_str, int_of_string sz_str)
+        let mb = int_of_string mb_str in
+        let size_classes = (sz_str1 :: sz_strs)
+                           |> List.map int_of_string
+                           |> Array.of_list
+        in Some (mb, size_classes)
       with _ -> None)
   | _ -> None 
     
