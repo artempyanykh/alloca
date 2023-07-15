@@ -1,3 +1,5 @@
+// Copyright (c) 2023 Artem Pianykh
+
 #include <array>
 #include <cstddef>
 #include <cstdint>

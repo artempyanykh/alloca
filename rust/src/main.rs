@@ -1,3 +1,5 @@
+// Copyright (c) 2023 Artem Pianykh
+
 use std::io;
 use std::io::Write;
 
