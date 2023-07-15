@@ -12,11 +12,10 @@ namespace {
 std::random_device rd;  // a seed source for the random number engine
 std::mt19937 gen(rd()); // mersenne_twister_engine seeded with rd()
 
-// const std::vector<std::size_t> size_classes{
-//     32, 64, 128, 256, 512, 1024, 4096, 1024 * 1024, 4 * 1024 * 1024};
+const std::vector<std::size_t> size_classes{32, 64, 128, 256};
 
-// sys malloc: threshold for mem release (<=256 retains; >=257 releases)
-const std::vector<std::size_t> size_classes{256};
+// macos sys malloc: threshold for mem release (<=256 retains; >=257 releases)
+// const std::vector<std::size_t> size_classes{257};
 
 // a random number generator to pick one of the size classes above
 std::uniform_int_distribution<std::size_t> distrib(0, size_classes.size() - 1);
